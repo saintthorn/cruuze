@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 176" width="520" role="img" aria-label="Cruuze logo: States">
+<rect width="520" height="176" rx="24" fill="#0c0c10"/>
+<g transform="translate(34 34) scale(1.7)"><path d="M32 32C27 39 22 43 17 43a11 11 0 0 1 0-22C22 21 27 25 32 32" fill="none" stroke="#f4f4f8" stroke-width="7" stroke-dasharray="5.2 4.6"/>
+<path d="M32 32C37 39 42 43 47 43a11 11 0 0 0 0-22C42 21 37 25 32 32" fill="none" stroke="#8f7dfa" stroke-width="7" stroke-linecap="round"/>
+<path d="M42 32.5l3.6 3.6 6.4-7.4" fill="none" stroke="#8f7dfa" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="170" y="113" fill="#f4f4f8" font-family="Inter, 'SF Pro Display', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="76" font-weight="620" letter-spacing="-4">cruuze</text>
+</svg>

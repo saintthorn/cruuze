@@ -1,0 +1,27 @@
+# env
+.env
+.env.local
+
+# go
+/server/bin/
+/server/data/
+/server/internal/webui/dist/*
+!/server/internal/webui/dist/.gitkeep
+
+# web
+node_modules/
+/web/dist/
+/web/e2e/.mail/
+/web/e2e/.attachments/
+/web/test-results/
+/web/playwright-report/
+*.tsbuildinfo
+
+# misc
+.cc-writes/
+.DS_Store
+*.log
+
+# Self-hosting backups
+deploy/backups/
+deploy/backup.log

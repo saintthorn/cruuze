@@ -1,0 +1,59 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "db",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "D=\"${TMPDIR:-/tmp}/cruuze-dev-pg\"; if [ ! -f \"$D/postgresql.conf\" ]; then rm -rf \"$D\"; initdb -D \"$D\" -U cruuze --auth=trust >/dev/null; fi; exec postgres -D \"$D\" -p 5434 -k \"$D\""],
+      "port": 5434
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd server && DATABASE_URL='postgres://cruuze@localhost:5434/postgres?sslmode=disable' LISTEN_ADDR=:8082 APP_URL=http://localhost:5175 SMTP_HOST= WEBHOOK_ALLOW_PRIVATE=true NOTIFICATION_EMAIL_DELAY=20s METRICS_TOKEN=dev INSTANCE_ADMINS=ada@example.com exec go run ./cmd/cruuze"],
+      "port": 8082
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "API_URL=http://localhost:8082 exec npm --prefix web run dev -- --port 5175 --strictPort"],
+      "port": 5175
+    },
+    {
+      "name": "e2e",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "createdb -h localhost -p 5434 -U cruuze cruuze_e2e 2>/dev/null; cd web && PATH=\"$HOME/.nvm/versions/node/v24.18.0/bin:$PATH\" E2E_DATABASE_URL='postgres://cruuze@localhost:5434/cruuze_e2e?sslmode=disable' npx playwright test --reporter=list; echo \"e2e-finished exit=$?\"; exec sleep 900"],
+      "port": 8081
+    },
+    {
+      "name": "gotest",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "(mkdir -p \"${TMPDIR:-/tmp}/gotest-empty\" && cd \"${TMPDIR:-/tmp}/gotest-empty\" && exec python3 -m http.server 8098 --bind 127.0.0.1 >/dev/null 2>&1) & createdb -h localhost -p 5434 -U cruuze cruuze_test 2>/dev/null; cd server && TEST_DATABASE_URL='postgres://cruuze@localhost:5434/cruuze_test?sslmode=disable' go test -count=1 ./... 2>&1 | grep -v 'no test files'; echo \"gotest-finished exit=${PIPESTATUS[0]}\"; wait"],
+      "port": 8098
+    },
+    {
+      "name": "design",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8799", "--bind", "127.0.0.1", "--directory", "design"],
+      "port": 8799
+    },
+    {
+      "name": "built",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "DATABASE_URL='postgres://cruuze@localhost:5434/postgres?sslmode=disable' SMTP_HOST= APP_URL=http://localhost:8090 PORT=8090 LOG_FORMAT=json METRICS_TOKEN=dev exec server/bin/cruuze"],
+      "port": 8090
+    },
+    {
+      "name": "seed",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd server && DATABASE_URL='postgres://cruuze@localhost:5434/postgres?sslmode=disable' go run ./cmd/seed -workspace acme-inc -team ENG -issues 50000 -days 85; echo seed-finished; exec sleep 900"],
+      "port": 8099
+    },
+    {
+      "name": "cloudflare",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd deploy/cloudflare && PATH=\"$HOME/.nvm/versions/node/v24.18.0/bin:$PATH\" WRANGLER_SEND_METRICS=false exec npx wrangler dev --port 8791 --test-scheduled"],
+      "port": 8791
+    }
+  ]
+}

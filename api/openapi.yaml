@@ -1,0 +1,4689 @@
+openapi: 3.0.3
+info:
+  title: Cruuze API
+  version: 0.1.0
+servers:
+  - url: /api
+security:
+  - cookieAuth: []
+  - bearerAuth: []
+
+paths:
+  /auth/config:
+    get:
+      operationId: getAuthConfig
+      security: []
+      responses:
+        "200":
+          description: Which sign-in methods are available.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthConfig"
+
+  /auth/magic-link:
+    post:
+      operationId: requestMagicLink
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MagicLinkRequest"
+      responses:
+        "204":
+          description: A sign-in email was sent if the address is deliverable.
+        default:
+          $ref: "#/components/responses/Error"
+
+  /auth/verify:
+    post:
+      operationId: verifyMagicLink
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyRequest"
+      responses:
+        "200":
+          description: Signed in. Sets the session cookie.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      responses:
+        "204":
+          description: Signed out.
+        default:
+          $ref: "#/components/responses/Error"
+
+  /me:
+    get:
+      operationId: getMe
+      responses:
+        "200":
+          description: The signed-in user and their workspaces.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        default:
+          $ref: "#/components/responses/Error"
+    patch:
+      operationId: updateMe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMeRequest"
+      responses:
+        "200":
+          description: The updated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces:
+    post:
+      operationId: createWorkspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkspaceRequest"
+      responses:
+        "201":
+          description: The new workspace. A first team is created with it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    patch:
+      operationId: updateWorkspace
+      description: Renames the workspace. Admins only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkspaceRequest"
+      responses:
+        "200":
+          description: The updated workspace.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/members/{userId}:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateWorkspaceMember
+      description: "Changes a member's role. Admins only; the last admin can't be demoted."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMemberRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: removeWorkspaceMember
+      description: |
+        Removes a member from the workspace and from its teams. Admins can
+        remove anyone; anyone can remove themselves (leave). The last admin
+        can't be removed. What the person wrote stays.
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/members:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: listWorkspaceMembers
+      responses:
+        "200":
+          description: Members of the workspace.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkspaceMember"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/invites:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: listWorkspaceInvites
+      responses:
+        "200":
+          description: Pending invites.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkspaceInvite"
+        default:
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createWorkspaceInvite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInviteRequest"
+      responses:
+        "201":
+          description: The invite. It is accepted when that email signs in.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceInvite"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/invites/{inviteId}:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+      - name: inviteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteWorkspaceInvite
+      responses:
+        "204":
+          description: Invite revoked.
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/teams:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: listTeams
+      responses:
+        "200":
+          description: Teams visible to the signed-in user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Team"
+        default:
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createTeam
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeamRequest"
+      responses:
+        "201":
+          description: The new team. The creator is its first member.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /teams/{teamId}/members:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    get:
+      operationId: listTeamMembers
+      responses:
+        "200":
+          description: Members of the team.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /teams/{teamId}/members/{userId}:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: addTeamMember
+      responses:
+        "204":
+          description: The user is a member of the team.
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: removeTeamMember
+      responses:
+        "204":
+          description: The user is no longer a member of the team.
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/sync/bootstrap:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: getSyncBootstrap
+      description: |
+        A consistent snapshot of every synced record the caller can see, plus
+        the sync ID it is current as of. Clients then open the WebSocket at
+        `/workspaces/{workspaceId}/sync/ws?after={lastSyncId}`, which sends
+        `SyncMessage` frames with every later change.
+      responses:
+        "200":
+          description: The snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncBootstrap"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/labels:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    post:
+      operationId: createLabel
+      description: |
+        Creates a label with a client-chosen ID. Repeating the request with
+        the same ID returns the existing label, so it is safe to retry.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLabelRequest"
+      responses:
+        "200":
+          description: The label already existed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelMutationResult"
+        "201":
+          description: The new label.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /labels/{labelId}:
+    parameters:
+      - name: labelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateLabel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLabelRequest"
+      responses:
+        "200":
+          description: The updated label.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteLabel
+      description: Deletes the label and removes it from every issue.
+      responses:
+        "200":
+          description: The label is deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /teams/{teamId}/issues:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    post:
+      operationId: createIssue
+      description: |
+        Creates an issue with a client-chosen ID. Repeating the request with
+        the same ID returns the existing issue, so it is safe to retry.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIssueRequest"
+      responses:
+        "200":
+          description: The issue already existed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueMutationResult"
+        "201":
+          description: The new issue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /issues/{issueId}:
+    parameters:
+      - $ref: "#/components/parameters/IssueId"
+    patch:
+      operationId: updateIssue
+      description: Updates only the fields present in the body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateIssueRequest"
+      responses:
+        "200":
+          description: The updated issue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: archiveIssue
+      responses:
+        "200":
+          description: The issue is archived.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /issues/{issueId}/details:
+    parameters:
+      - $ref: "#/components/parameters/IssueId"
+    get:
+      operationId: getIssueDetails
+      description: |
+        The issue's comments, reactions and activity. The bootstrap leaves
+        these out; clients fetch them when an issue is opened and keep them
+        current from the sync socket afterwards.
+      responses:
+        "200":
+          description: Everything as of `syncId`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueDetails"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /issues/{issueId}/subscription:
+    parameters:
+      - $ref: "#/components/parameters/IssueId"
+    put:
+      operationId: subscribeToIssue
+      description: Subscribes the caller to notifications about the issue.
+      responses:
+        "200":
+          description: The issue, with the caller among its subscribers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: unsubscribeFromIssue
+      responses:
+        "200":
+          description: The issue, without the caller among its subscribers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /issues/{issueId}/comments:
+    parameters:
+      - $ref: "#/components/parameters/IssueId"
+    post:
+      operationId: createComment
+      description: |
+        Adds a comment with a client-chosen ID; repeating the request returns
+        the existing comment. The author and anyone mentioned are subscribed
+        to the issue, and its subscribers are notified.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentRequest"
+      responses:
+        "200":
+          description: The comment already existed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentMutationResult"
+        "201":
+          description: The new comment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /issues/{issueId}/attachments:
+    parameters:
+      - $ref: "#/components/parameters/IssueId"
+    post:
+      operationId: uploadAttachment
+      description: Uploads a file (up to 25 MB) to the issue.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: The stored attachment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttachmentMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /comments/{commentId}:
+    parameters:
+      - $ref: "#/components/parameters/CommentId"
+    patch:
+      operationId: updateComment
+      description: Only the author can edit a comment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCommentRequest"
+      responses:
+        "200":
+          description: The edited comment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteComment
+      description: The author or a workspace admin can delete a comment.
+      responses:
+        "200":
+          description: The comment is deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /comments/{commentId}/reactions/{emoji}:
+    parameters:
+      - $ref: "#/components/parameters/CommentId"
+      - name: emoji
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: addReaction
+      responses:
+        "200":
+          description: The caller's reaction is on the comment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: removeReaction
+      responses:
+        "200":
+          description: The caller's reaction is off the comment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /notifications/{notificationId}:
+    parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateNotification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNotificationRequest"
+      responses:
+        "200":
+          description: The notification is marked.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteNotification
+      responses:
+        "200":
+          description: The notification is deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /attachments/{attachmentId}:
+    parameters:
+      - name: attachmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: downloadAttachment
+      responses:
+        "200":
+          description: The file. Images are served inline; everything else as a download.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteAttachment
+      description: The uploader or a workspace admin can delete an attachment.
+      responses:
+        "200":
+          description: The attachment is deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /teams/{teamId}:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    patch:
+      operationId: updateTeam
+      description: "Changes a team's name, privacy, cycle length or triage setting."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTeamRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteTeam
+      description: |
+        Deletes a team with everything it owns: its issues, comments, statuses,
+        cycles and memberships. Admins only. It cannot be undone, and every
+        client of the workspace loads it afresh.
+      responses:
+        "204":
+          description: Deleted.
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/projects:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    post:
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectMutationResult"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /projects/{projectId}:
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProjectRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteProject
+      description: Deletes the project and its milestones. Its issues stay, without a project.
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /projects/{projectId}/milestones:
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: createMilestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMilestoneRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MilestoneMutationResult"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MilestoneMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /milestones/{milestoneId}:
+    parameters:
+      - name: milestoneId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateMilestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMilestoneRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MilestoneMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteMilestone
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /issues/{issueId}/relations:
+    parameters:
+      - $ref: "#/components/parameters/IssueId"
+    post:
+      operationId: createRelation
+      description: "Relates this issue to another: it blocks, duplicates or relates to it."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRelationRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationMutationResult"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /relations/{relationId}:
+    parameters:
+      - name: relationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteRelation
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /teams/{teamId}/templates:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    post:
+      operationId: createTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTemplateRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemplateMutationResult"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemplateMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /templates/{templateId}:
+    parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTemplateRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemplateMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteTemplate
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/views:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    post:
+      operationId: createView
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateViewRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ViewMutationResult"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ViewMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /views/{viewId}:
+    parameters:
+      - name: viewId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateView
+      description: Only the owner can change a view.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateViewRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ViewMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteView
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/favorites:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    post:
+      operationId: createFavorite
+      description: "Adds something to the caller's favorites."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFavoriteRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteMutationResult"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /favorites/{favoriteId}:
+    parameters:
+      - name: favoriteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteFavorite
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/search:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: searchIssues
+      description: Full-text search over the titles, descriptions and comments of the issues the caller can see, archived ones included.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The best matches, most relevant first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/api-keys:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: listApiKeys
+      description: "The caller's own API keys for this workspace."
+      responses:
+        "200":
+          description: The keys, without their secrets.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApiKey"
+        default:
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createApiKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateApiKeyRequest"
+      responses:
+        "201":
+          description: The new key. This is the only time its token is returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedApiKey"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api-keys/{apiKeyId}:
+    parameters:
+      - name: apiKeyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteApiKey
+      responses:
+        "204":
+          description: The key no longer works.
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/webhooks:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: listWebhooks
+      description: Admins only.
+      responses:
+        "200":
+          description: The workspace's webhooks.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Webhook"
+        default:
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createWebhook
+      description: Admins only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWebhookRequest"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /webhooks/{webhookId}:
+    parameters:
+      - $ref: "#/components/parameters/WebhookId"
+    patch:
+      operationId: updateWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWebhookRequest"
+      responses:
+        "200":
+          description: The updated webhook.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteWebhook
+      responses:
+        "204":
+          description: Deleted, along with its delivery history.
+        default:
+          $ref: "#/components/responses/Error"
+
+  /webhooks/{webhookId}/deliveries:
+    parameters:
+      - $ref: "#/components/parameters/WebhookId"
+    get:
+      operationId: listWebhookDeliveries
+      responses:
+        "200":
+          description: The 50 most recent deliveries, newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WebhookDelivery"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/integrations/github:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: getGithubIntegration
+      description: Admins only.
+      responses:
+        "200":
+          description: Whether GitHub is connected, and how to connect it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GithubIntegration"
+        default:
+          $ref: "#/components/responses/Error"
+    put:
+      operationId: enableGithubIntegration
+      description: Connects GitHub, or replaces the secret if it already is connected.
+      responses:
+        "200":
+          description: The integration with its new secret.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GithubIntegration"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: disableGithubIntegration
+      responses:
+        "204":
+          description: GitHub events are no longer accepted. Linked pull requests stay.
+        default:
+          $ref: "#/components/responses/Error"
+
+  /integrations/github/{workspaceId}:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    post:
+      operationId: receiveGithubWebhook
+      description: |
+        Where GitHub sends webhook events. The request is authenticated by its
+        `X-Hub-Signature-256` header. Pull request events link the pull request
+        to the issues named in its branch, title or description.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "204":
+          description: Accepted.
+        default:
+          $ref: "#/components/responses/Error"
+
+  /teams/{teamId}/import:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    post:
+      operationId: importIssues
+      description: |
+        Creates an issue per row of a CSV file (up to 2,000 rows). The header
+        row names the columns; `Title` is required, and `Description`,
+        `Status`, `Priority`, `Assignee`, `Labels` and `Due date`
+        are used when present. Labels that don't exist yet are created.
+      requestBody:
+        required: true
+        content:
+          text/csv:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: What was imported.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /teams/{teamId}/states:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    post:
+      operationId: createWorkflowState
+      description: Adds a status to the team's workflow. Team members and admins only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkflowStateRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /states/{stateId}:
+    parameters:
+      - name: stateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateWorkflowState
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkflowStateRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteWorkflowState
+      description: |
+        Removes a status. Refused while any issue (archived ones included) is
+        in it, and for the last status new issues could start in or be
+        completed in.
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /issues/batch:
+    post:
+      operationId: updateIssues
+      description: |
+        Applies several issue updates in one transaction, in order. Either
+        all of them apply or none do.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateIssuesRequest"
+      responses:
+        "200":
+          description: All applied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/issues/lookup:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: lookupIssue
+      description: |
+        Finds one issue by its ID or its `KEY-number`, whether or not it is
+        archived. This is how a client gets an archived issue, which the
+        bootstrap leaves out.
+      parameters:
+        - name: ref
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The issue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Issue"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /issues/{issueId}/unarchive:
+    parameters:
+      - $ref: "#/components/parameters/IssueId"
+    post:
+      operationId: unarchiveIssue
+      responses:
+        "200":
+          description: The issue, back among the active ones.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueMutationResult"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /teams/{teamId}/archived:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    get:
+      operationId: listArchivedIssues
+      description: "A team's archived issues, most recently archived first, 50 at a time."
+      parameters:
+        - name: before
+          in: query
+          description: "Only issues archived before this time: the `archivedAt` of the last one already fetched."
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: A page of archived issues.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArchivedIssues"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /teams/{teamId}/insights:
+    parameters:
+      - $ref: "#/components/parameters/TeamId"
+    get:
+      operationId: getTeamInsights
+      description: |
+        How the team's work has been flowing over the last twelve weeks. The
+        numbers describe the team as a whole; there are none per person.
+      responses:
+        "200":
+          description: The report.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamInsights"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /projects/{projectId}/forecast:
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getProjectForecast
+      description: |
+        When the project, or one milestone of it, is likely to be done, from
+        how fast its issues have actually been completed.
+      parameters:
+        - name: milestoneId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The forecast.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forecast"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /cycles/{cycleId}/forecast:
+    parameters:
+      - name: cycleId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getCycleForecast
+      description: "Whether the cycle's remaining issues are likely to be done by its end, from the team's recent pace."
+      responses:
+        "200":
+          description: The forecast.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forecast"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /issues/{issueId}/time-entries:
+    parameters:
+      - $ref: "#/components/parameters/IssueId"
+    post:
+      operationId: createTimeEntry
+      description: |
+        Logs time on an issue, or starts a timer on it. With `endedAt` it is a
+        finished stretch; without, a timer that runs until it is stopped.
+        Starting a timer stops the caller's running one, if any.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTimeEntryRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /time-entries/{timeEntryId}:
+    parameters:
+      - name: timeEntryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateTimeEntry
+      description: "Stops a running timer (by giving `endedAt`), or corrects an entry. Only the entry's owner can."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTimeEntryRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteTimeEntry
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/time-entries.csv:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: exportTimeEntries
+      description: |
+        A timesheet as CSV. Admins get everyone's time; everyone else their
+        own. Only issues the caller can see are included.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          description: The last day included.
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: The entries, oldest first.
+          content:
+            text/csv:
+              schema:
+                type: string
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/initiatives:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    post:
+      operationId: createInitiative
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInitiativeRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /initiatives/{initiativeId}:
+    parameters:
+      - name: initiativeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateInitiative
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInitiativeRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteInitiative
+      description: Deletes the initiative. Its projects stay, without one.
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /projects/{projectId}/dependencies:
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: createProjectDependency
+      description: Says the project depends on another. Refused if that would make a loop.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectDependencyRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /project-dependencies/{dependencyId}:
+    parameters:
+      - name: dependencyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteProjectDependency
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /projects/{projectId}/updates:
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: createProjectUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectUpdateRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /project-updates/{updateId}:
+    parameters:
+      - name: updateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteProjectUpdate
+      description: Its author or an admin may delete an update.
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/portal:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    patch:
+      operationId: updatePortal
+      description: Turns the customer portal on or off and sets what it shows. Admins only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePortalRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/requests:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    post:
+      operationId: createCustomerRequest
+      description: Notes down a request on a customer's behalf.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerRequestRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /requests/{requestId}:
+    parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateCustomerRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCustomerRequestRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteCustomerRequest
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncAck"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /portal/{urlKey}:
+    parameters:
+      - name: urlKey
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getPortal
+      description: A workspace's public request page. Signed-in visitors also get their own requests.
+      security: []
+      responses:
+        "200":
+          description: The portal.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portal"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /portal/{urlKey}/requests:
+    parameters:
+      - name: urlKey
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: createPortalRequest
+      description: Sends a request as the signed-in visitor.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePortalRequestRequest"
+      responses:
+        "200":
+          description: It already existed (a retried request).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalRequest"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalRequest"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /portal/{urlKey}/requests/{requestId}/vote:
+    parameters:
+      - name: urlKey
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: addPortalVote
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalRequest"
+        default:
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: removePortalVote
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalRequest"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /admin/instance:
+    get:
+      operationId: getInstance
+      description: Settings for the whole install. Instance admins only.
+      responses:
+        "200":
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceSettings"
+        default:
+          $ref: "#/components/responses/Error"
+    patch:
+      operationId: updateInstance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInstanceRequest"
+      responses:
+        "200":
+          description: Done.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceSettings"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/imports:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: listImports
+      description: The workspace's imports, newest first. Admins only.
+      responses:
+        "200":
+          description: The imports.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Import"
+        default:
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: startImport
+      description: |
+        Starts an import, which then runs on the server. Poll the import for
+        its progress. Running the same import again updates what the first
+        run made rather than duplicating it. Admins only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportRequest"
+      responses:
+        "202":
+          description: Started.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Import"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/imports/preview:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    post:
+      operationId: previewImport
+      description: Connects to the source and says which teams and people it has, without importing anything.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportRequest"
+      responses:
+        "200":
+          description: What is there.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportPreview"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/imports/connections:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: listImportConnections
+      description: |
+        Which trackers this server can connect to through their own sign-in
+        pages, and which of them the caller has connected. A connection is
+        its admin's alone. To make one, send the browser to
+        /api/workspaces/{workspaceId}/imports/connect/{provider}. Admins only.
+      responses:
+        "200":
+          description: The connections.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportConnections"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/imports/connections/github/repos:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+    get:
+      operationId: listImportConnectionRepos
+      description: The repositories with issues that the caller's GitHub connection can read, most recently pushed first.
+      responses:
+        "200":
+          description: Repositories, as owner/name.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        default:
+          $ref: "#/components/responses/Error"
+
+  /workspaces/{workspaceId}/imports/connections/{provider}:
+    parameters:
+      - $ref: "#/components/parameters/WorkspaceId"
+      - name: provider
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/ImportProvider"
+    delete:
+      operationId: deleteImportConnection
+      description: Forgets the caller's connection to a tracker.
+      responses:
+        "204":
+          description: Forgotten.
+        default:
+          $ref: "#/components/responses/Error"
+
+  /imports/{importId}:
+    parameters:
+      - name: importId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getImport
+      responses:
+        "200":
+          description: The import.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Import"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /imports/{importId}/undo:
+    parameters:
+      - name: importId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: undoImport
+      description: Removes what the import created. What it only matched or updated stays.
+      responses:
+        "200":
+          description: Undone.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Import"
+        default:
+          $ref: "#/components/responses/Error"
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: cruuze_session
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "An API key, sent as `Authorization: Bearer cruuze_...`. It acts as its owner within one workspace."
+
+  parameters:
+    WorkspaceId:
+      name: workspaceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TeamId:
+      name: teamId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IssueId:
+      name: issueId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CommentId:
+      name: commentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    WebhookId:
+      name: webhookId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Stable machine-readable code, e.g. `not_found`.
+        message:
+          type: string
+
+    SignupMode:
+      type: string
+      description: "Who may make an account: anyone, people invited to a workspace, or also addresses at the listed domains."
+      enum: [open, invited, domains]
+
+    AuthConfig:
+      type: object
+      required: [google, signup, version]
+      properties:
+        google:
+          type: boolean
+        signup:
+          $ref: "#/components/schemas/SignupMode"
+        version:
+          type: string
+
+    InstanceSettings:
+      type: object
+      description: Settings and a few counts for the whole install, for whoever runs it.
+      required: [version, signup, signupDomains, workspaceCreation, users, workspaces, issues, admins]
+      properties:
+        version:
+          type: string
+        signup:
+          $ref: "#/components/schemas/SignupMode"
+        signupDomains:
+          type: array
+          items:
+            type: string
+        workspaceCreation:
+          type: string
+          enum: [anyone, admins]
+          description: Who may create workspaces.
+        users:
+          type: integer
+          format: int64
+        workspaces:
+          type: integer
+          format: int64
+        issues:
+          type: integer
+          format: int64
+        admins:
+          type: array
+          description: Addresses of the people who administer the install.
+          items:
+            type: string
+
+    UpdateInstanceRequest:
+      type: object
+      properties:
+        signup:
+          $ref: "#/components/schemas/SignupMode"
+        signupDomains:
+          type: array
+          items:
+            type: string
+        workspaceCreation:
+          type: string
+          enum: [anyone, admins]
+
+    MagicLinkRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+        portal:
+          type: string
+          description: URL key of a workspace whose portal the link should lead back to.
+
+    VerifyRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+    User:
+      type: object
+      required: [id, email, name, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        name:
+          type: string
+        avatarUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    WorkspaceRole:
+      type: string
+      enum: [admin, member, guest]
+
+    Workspace:
+      type: object
+      required: [id, name, urlKey, role, portalEnabled, portalPublicBoard, portalIntro, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        urlKey:
+          type: string
+        role:
+          $ref: "#/components/schemas/WorkspaceRole"
+        portalEnabled:
+          type: boolean
+          description: Whether customers can send requests at /portal/{urlKey}.
+        portalPublicBoard:
+          type: boolean
+          description: Whether requests marked public are listed on the portal for votes.
+        portalIntro:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Me:
+      type: object
+      required: [user, workspaces, emailNotifications, githubLogin, instanceAdmin, canCreateWorkspace]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        instanceAdmin:
+          type: boolean
+          description: Whether the user administers this install.
+        canCreateWorkspace:
+          type: boolean
+        emailNotifications:
+          type: boolean
+          description: Whether unread notifications are also sent by email.
+        githubLogin:
+          type: string
+          description: "The user's GitHub username, so their GitHub activity is credited to them. Empty if not given."
+        workspaces:
+          type: array
+          items:
+            $ref: "#/components/schemas/Workspace"
+
+    UpdateMeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        emailNotifications:
+          type: boolean
+        githubLogin:
+          type: string
+          description: Empty clears it.
+
+    UpdateWorkspaceRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+
+    UpdateMemberRequest:
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: "#/components/schemas/WorkspaceRole"
+
+    CreateWorkspaceRequest:
+      type: object
+      required: [name, urlKey]
+      properties:
+        name:
+          type: string
+        urlKey:
+          type: string
+          description: Lowercase letters, digits and dashes; 3-32 characters.
+
+    WorkspaceMember:
+      type: object
+      required: [user, role, joinedAt]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        role:
+          $ref: "#/components/schemas/WorkspaceRole"
+        joinedAt:
+          type: string
+          format: date-time
+
+    WorkspaceInvite:
+      type: object
+      required: [id, email, role, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        role:
+          $ref: "#/components/schemas/WorkspaceRole"
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateInviteRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+        role:
+          $ref: "#/components/schemas/WorkspaceRole"
+
+    Team:
+      type: object
+      required: [id, workspaceId, name, key, private, isMember, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        key:
+          type: string
+          description: Issue identifier prefix, e.g. `ENG`.
+        private:
+          type: boolean
+        isMember:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    TeamKind:
+      type: string
+      description: What sort of team it is. Decides the workflow a new team starts with and which pages the app offers it.
+      enum: [engineering, support, marketing, design, general]
+
+    CreateTeamRequest:
+      type: object
+      required: [name, key]
+      properties:
+        name:
+          type: string
+        kind:
+          $ref: "#/components/schemas/TeamKind"
+        key:
+          type: string
+          description: Uppercase letters and digits, starting with a letter; 1-7 characters.
+        private:
+          type: boolean
+
+    UserRecord:
+      description: A workspace member, as synced to clients.
+      type: object
+      required: [id, email, name, role, joinedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        name:
+          type: string
+        avatarUrl:
+          type: string
+        role:
+          $ref: "#/components/schemas/WorkspaceRole"
+        joinedAt:
+          type: string
+          format: date-time
+
+    TeamRecord:
+      description: A team, as synced to clients.
+      type: object
+      required: [id, name, key, kind, private, cycleWeeks, triageEnabled, autoArchiveDays, staleDays, autoCloseDays, autoCloseParent, autoAssign, autoCycle, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        key:
+          type: string
+        kind:
+          $ref: "#/components/schemas/TeamKind"
+        private:
+          type: boolean
+        autoArchiveDays:
+          type: integer
+          format: int32
+          description: Closed issues are archived after this many days; 0 never archives.
+        staleDays:
+          type: integer
+          format: int32
+          description: Open issues untouched for this many days are flagged for cleanup; 0 flags nothing.
+        autoCloseDays:
+          type: integer
+          format: int32
+          description: Unstarted issues untouched for this many days are canceled; 0 never cancels.
+        autoCloseParent:
+          type: boolean
+          description: A parent issue is completed when its last open sub-issue is closed.
+        autoAssign:
+          type: boolean
+          description: Whoever starts an unassigned issue becomes its assignee.
+        autoCycle:
+          type: boolean
+          description: "An issue that is started joins the team's current cycle."
+        reviewStateId:
+          type: string
+          format: uuid
+          description: Where an issue goes when its pull request asks for review. Absent leaves it be.
+        cycleWeeks:
+          type: integer
+          format: int32
+          description: Length of the team's cycles in weeks; 0 means cycles are off.
+        triageEnabled:
+          type: boolean
+          description: Whether issues from people outside the team wait in triage first.
+        createdAt:
+          type: string
+          format: date-time
+
+    TeamMemberRecord:
+      type: object
+      required: [teamId, userId]
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+
+    WorkflowStateType:
+      type: string
+      enum: [triage, backlog, unstarted, started, completed, canceled]
+
+    WorkflowState:
+      type: object
+      required: [id, teamId, name, type, color, position]
+      properties:
+        id:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/WorkflowStateType"
+        color:
+          type: string
+        position:
+          type: number
+          format: double
+
+    Issue:
+      type: object
+      required: [id, teamId, number, title, description, stateId, priority, sortOrder, labelIds, subscriberIds, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          format: int32
+          description: Sequential within the team; shown as `KEY-number`.
+        title:
+          type: string
+        description:
+          type: string
+        stateId:
+          type: string
+          format: uuid
+        priority:
+          type: integer
+          format: int32
+          description: 0 none, 1 urgent, 2 high, 3 medium, 4 low.
+        assigneeId:
+          type: string
+          format: uuid
+        creatorId:
+          type: string
+          format: uuid
+        sortOrder:
+          type: number
+          format: double
+        labelIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        projectId:
+          type: string
+          format: uuid
+        milestoneId:
+          type: string
+          format: uuid
+        cycleId:
+          type: string
+          format: uuid
+        parentId:
+          type: string
+          format: uuid
+          description: The issue this one is a sub-issue of.
+        subscriberIds:
+          type: array
+          description: Users notified about changes to the issue.
+          items:
+            type: string
+            format: uuid
+        dueDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        archivedAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+          description: When work first began (the issue first entered a started status).
+        completedAt:
+          type: string
+          format: date-time
+          description: When the issue was completed or canceled. Absent while it is open.
+        loggedSeconds:
+          type: integer
+          format: int32
+          description: "Time logged on the issue, by everyone, in seconds."
+
+    CreateIssueRequest:
+      type: object
+      required: [id, title]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Chosen by the client so retries are idempotent.
+        title:
+          type: string
+        description:
+          type: string
+        stateId:
+          type: string
+          format: uuid
+          description: Defaults to the team's backlog state.
+        priority:
+          type: integer
+          format: int32
+        assigneeId:
+          type: string
+          format: uuid
+        sortOrder:
+          type: number
+          format: double
+          description: Defaults to the top of the team's list.
+        labelIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        dueDate:
+          type: string
+          format: date
+        projectId:
+          type: string
+          format: uuid
+        milestoneId:
+          type: string
+          format: uuid
+        cycleId:
+          type: string
+          format: uuid
+        parentId:
+          type: string
+          format: uuid
+
+    UpdateIssueRequest:
+      type: object
+      properties:
+        touch:
+          type: boolean
+          description: |
+            Marks the issue as looked at and still wanted, without changing
+            it: it stops counting as stale. Ignored alongside other changes,
+            which have the same effect.
+        title:
+          type: string
+        description:
+          type: string
+        stateId:
+          type: string
+          format: uuid
+        priority:
+          type: integer
+          format: int32
+        assigneeId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Pass null to unassign.
+        sortOrder:
+          type: number
+          format: double
+        addLabelIds:
+          type: array
+          description: Labels to add. Adding and removing, rather than replacing the set, lets concurrent edits combine.
+          items:
+            type: string
+            format: uuid
+        removeLabelIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          description: Pass null to clear.
+        projectId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Pass null to remove from its project. Changing project clears the milestone.
+        milestoneId:
+          type: string
+          format: uuid
+          nullable: true
+        cycleId:
+          type: string
+          format: uuid
+          nullable: true
+        parentId:
+          type: string
+          format: uuid
+          nullable: true
+
+    IssueMutationResult:
+      type: object
+      required: [issue, syncId]
+      properties:
+        issue:
+          $ref: "#/components/schemas/Issue"
+        syncId:
+          type: integer
+          format: int64
+          description: The change is reflected once the client has applied this sync ID.
+
+    Label:
+      type: object
+      required: [id, name, color]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        color:
+          type: string
+          description: Hex color, e.g. `#5e6ad2`.
+
+    CreateLabelRequest:
+      type: object
+      required: [id, name, color]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Chosen by the client so retries are idempotent.
+        name:
+          type: string
+        color:
+          type: string
+
+    UpdateLabelRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+
+    LabelMutationResult:
+      type: object
+      required: [label, syncId]
+      properties:
+        label:
+          $ref: "#/components/schemas/Label"
+        syncId:
+          type: integer
+          format: int64
+
+    SyncAck:
+      type: object
+      required: [syncId]
+      properties:
+        syncId:
+          type: integer
+          format: int64
+          description: The change is reflected once the client has applied this sync ID.
+
+    Comment:
+      type: object
+      required: [id, issueId, body, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+          description: The author; absent if their account was deleted.
+        body:
+          type: string
+          description: Markdown. Mentions are links to `mention://user/{userId}`.
+        createdAt:
+          type: string
+          format: date-time
+        editedAt:
+          type: string
+          format: date-time
+
+    CreateCommentRequest:
+      type: object
+      required: [id, body]
+      properties:
+        id:
+          type: string
+          format: uuid
+        body:
+          type: string
+
+    UpdateCommentRequest:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+
+    CommentMutationResult:
+      type: object
+      required: [comment, syncId]
+      properties:
+        comment:
+          $ref: "#/components/schemas/Comment"
+        syncId:
+          type: integer
+          format: int64
+
+    Reaction:
+      type: object
+      required: [commentId, userId, emoji]
+      properties:
+        commentId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        emoji:
+          type: string
+
+    ActivityType:
+      type: string
+      enum: [created, title, description, state, priority, assignee, labels, dueDate, project, milestone, cycle, parent, archived, unarchived, reviewed]
+
+    Activity:
+      description: One change to an issue, for its activity feed.
+      type: object
+      required: [id, issueId, type, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+          format: uuid
+        type:
+          $ref: "#/components/schemas/ActivityType"
+        from:
+          type: string
+          description: The previous value (an ID, number or date as text); absent if there was none.
+        to:
+          type: string
+        addedLabelIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        removedLabelIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    NotificationType:
+      type: string
+      enum: [assigned, mentioned, commented, status]
+
+    Notification:
+      description: Something that happened on an issue the recipient follows. Only the recipient sees it.
+      type: object
+      required: [id, type, issueId, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: "#/components/schemas/NotificationType"
+        issueId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+          format: uuid
+        commentId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        readAt:
+          type: string
+          format: date-time
+
+    UpdateNotificationRequest:
+      type: object
+      required: [read]
+      properties:
+        read:
+          type: boolean
+
+    Attachment:
+      type: object
+      required: [id, issueId, filename, contentType, size, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        uploaderId:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        contentType:
+          type: string
+        size:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+
+    AttachmentMutationResult:
+      type: object
+      required: [attachment, syncId]
+      properties:
+        attachment:
+          $ref: "#/components/schemas/Attachment"
+        syncId:
+          type: integer
+          format: int64
+
+    UpdateTeamRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          $ref: "#/components/schemas/TeamKind"
+        cycleWeeks:
+          type: integer
+          format: int32
+        triageEnabled:
+          type: boolean
+        private:
+          type: boolean
+          description: Only a member of the team can make it private.
+        autoArchiveDays:
+          type: integer
+          format: int32
+          description: Closed issues are archived after this many days; 0 never archives.
+        staleDays:
+          type: integer
+          format: int32
+        autoCloseDays:
+          type: integer
+          format: int32
+        autoCloseParent:
+          type: boolean
+        autoAssign:
+          type: boolean
+        autoCycle:
+          type: boolean
+        reviewStateId:
+          type: string
+          format: uuid
+          nullable: true
+          description: "One of the team's started statuses, or null for none."
+
+    TeamMutationResult:
+      type: object
+      required: [team, syncId]
+      properties:
+        team:
+          $ref: "#/components/schemas/TeamRecord"
+        syncId:
+          type: integer
+          format: int64
+
+    ProjectStatus:
+      type: string
+      enum: [backlog, planned, started, paused, completed, canceled]
+
+    Project:
+      type: object
+      required: [id, name, description, status, color, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          description: Markdown.
+        status:
+          $ref: "#/components/schemas/ProjectStatus"
+        leadId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+        targetDate:
+          type: string
+          format: date
+        color:
+          type: string
+        initiativeId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateProjectRequest:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProjectStatus"
+        leadId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+        targetDate:
+          type: string
+          format: date
+        color:
+          type: string
+        initiativeId:
+          type: string
+          format: uuid
+
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProjectStatus"
+        leadId:
+          type: string
+          format: uuid
+          nullable: true
+        startDate:
+          type: string
+          format: date
+          nullable: true
+        targetDate:
+          type: string
+          format: date
+          nullable: true
+        color:
+          type: string
+        initiativeId:
+          type: string
+          format: uuid
+          nullable: true
+
+    ProjectMutationResult:
+      type: object
+      required: [project, syncId]
+      properties:
+        project:
+          $ref: "#/components/schemas/Project"
+        syncId:
+          type: integer
+          format: int64
+
+    Milestone:
+      type: object
+      required: [id, projectId, name, sortOrder]
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        targetDate:
+          type: string
+          format: date
+        sortOrder:
+          type: number
+          format: double
+
+    CreateMilestoneRequest:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        targetDate:
+          type: string
+          format: date
+
+    UpdateMilestoneRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        targetDate:
+          type: string
+          format: date
+          nullable: true
+        sortOrder:
+          type: number
+          format: double
+
+    MilestoneMutationResult:
+      type: object
+      required: [milestone, syncId]
+      properties:
+        milestone:
+          $ref: "#/components/schemas/Milestone"
+        syncId:
+          type: integer
+          format: int64
+
+    Cycle:
+      description: A fixed-length work period for a team. The server creates them.
+      type: object
+      required: [id, teamId, number, name, startsAt, endsAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          format: int32
+        name:
+          type: string
+        startsAt:
+          type: string
+          format: date
+        endsAt:
+          type: string
+          format: date
+          description: The last day of the cycle.
+
+    RelationType:
+      type: string
+      enum: [blocks, duplicate, related]
+
+    Relation:
+      description: "`issueId` blocks, duplicates or relates to `relatedIssueId`."
+      type: object
+      required: [id, issueId, relatedIssueId, type]
+      properties:
+        id:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        relatedIssueId:
+          type: string
+          format: uuid
+        type:
+          $ref: "#/components/schemas/RelationType"
+
+    CreateRelationRequest:
+      type: object
+      required: [id, relatedIssueId, type]
+      properties:
+        id:
+          type: string
+          format: uuid
+        relatedIssueId:
+          type: string
+          format: uuid
+        type:
+          $ref: "#/components/schemas/RelationType"
+
+    RelationMutationResult:
+      type: object
+      required: [relation, syncId]
+      properties:
+        relation:
+          $ref: "#/components/schemas/Relation"
+        syncId:
+          type: integer
+          format: int64
+
+    Template:
+      description: Preset values for new issues in a team.
+      type: object
+      required: [id, teamId, name, title, description, priority, labelIds]
+      properties:
+        id:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: integer
+          format: int32
+        labelIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    CreateTemplateRequest:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: integer
+          format: int32
+        labelIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    UpdateTemplateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: integer
+          format: int32
+        labelIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    TemplateMutationResult:
+      type: object
+      required: [template, syncId]
+      properties:
+        template:
+          $ref: "#/components/schemas/Template"
+        syncId:
+          type: integer
+          format: int64
+
+    View:
+      description: A saved set of filters and display options.
+      type: object
+      required: [id, name, ownerId, shared, options]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        ownerId:
+          type: string
+          format: uuid
+        shared:
+          type: boolean
+          description: Visible to the whole workspace rather than only its owner.
+        teamId:
+          type: string
+          format: uuid
+          description: Limits the view to one team; absent means every team.
+        options:
+          type: object
+          additionalProperties: true
+          description: The client's display options; stored as given.
+
+    CreateViewRequest:
+      type: object
+      required: [id, name, options]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        shared:
+          type: boolean
+        teamId:
+          type: string
+          format: uuid
+        options:
+          type: object
+          additionalProperties: true
+
+    UpdateViewRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        shared:
+          type: boolean
+        options:
+          type: object
+          additionalProperties: true
+
+    ViewMutationResult:
+      type: object
+      required: [view, syncId]
+      properties:
+        view:
+          $ref: "#/components/schemas/View"
+        syncId:
+          type: integer
+          format: int64
+
+    FavoriteKind:
+      type: string
+      enum: [issue, project, view, cycle]
+
+    Favorite:
+      description: Something the user pinned to their sidebar. Only they see it.
+      type: object
+      required: [id, kind, targetId, sortOrder]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: "#/components/schemas/FavoriteKind"
+        targetId:
+          type: string
+          format: uuid
+        sortOrder:
+          type: number
+          format: double
+
+    CreateFavoriteRequest:
+      type: object
+      required: [id, kind, targetId]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: "#/components/schemas/FavoriteKind"
+        targetId:
+          type: string
+          format: uuid
+
+    FavoriteMutationResult:
+      type: object
+      required: [favorite, syncId]
+      properties:
+        favorite:
+          $ref: "#/components/schemas/Favorite"
+        syncId:
+          type: integer
+          format: int64
+
+    SyncBootstrap:
+      type: object
+      required: [lastSyncId, users, teams, teamMembers, workflowStates, labels, issues, comments, attachments, notifications, projects, milestones, cycles, relations, templates, views, favorites, pullRequests, timeEntries, initiatives, projectDependencies, projectUpdates, customerRequests]
+      properties:
+        lastSyncId:
+          type: integer
+          format: int64
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserRecord"
+        teams:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeamRecord"
+        teamMembers:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeamMemberRecord"
+        workflowStates:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowState"
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/Label"
+        issues:
+          type: array
+          description: Archived issues are not included.
+          items:
+            $ref: "#/components/schemas/Issue"
+
+        comments:
+          type: array
+          description: "Only the comments the caller's notifications are about. An issue's full discussion comes from its details."
+          items:
+            $ref: "#/components/schemas/Comment"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attachment"
+        notifications:
+          type: array
+          description: The caller's own, newest first, up to 500.
+          items:
+            $ref: "#/components/schemas/Notification"
+
+        projects:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+        milestones:
+          type: array
+          items:
+            $ref: "#/components/schemas/Milestone"
+        cycles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Cycle"
+        relations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Relation"
+        templates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Template"
+        views:
+          type: array
+          items:
+            $ref: "#/components/schemas/View"
+        favorites:
+          type: array
+          items:
+            $ref: "#/components/schemas/Favorite"
+        pullRequests:
+          type: array
+          items:
+            $ref: "#/components/schemas/PullRequest"
+        customerRequests:
+          type: array
+          description: Empty for guests.
+          items:
+            $ref: "#/components/schemas/CustomerRequest"
+        projectUpdates:
+          type: array
+          description: The latest few of each project.
+          items:
+            $ref: "#/components/schemas/ProjectUpdate"
+        projectDependencies:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectDependency"
+        initiatives:
+          type: array
+          items:
+            $ref: "#/components/schemas/Initiative"
+        timeEntries:
+          type: array
+          description: "The caller's own: any running timer and the last 60 days."
+          items:
+            $ref: "#/components/schemas/TimeEntry"
+
+    IssueDetails:
+      type: object
+      required: [syncId, comments, reactions, activities, inProgressSeconds]
+      properties:
+        inProgressSeconds:
+          type: integer
+          format: int64
+          description: How long the issue has spent in started statuses, counting the current stay up to now.
+        syncId:
+          type: integer
+          format: int64
+          description: The sync ID these records are current as of.
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+        reactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reaction"
+        activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Activity"
+
+    SearchResults:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResult"
+
+    SearchResult:
+      type: object
+      required: [issueId, identifier, title, stateId, archived, snippet, inComment]
+      properties:
+        issueId:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+          description: "The issue's `KEY-number`."
+        title:
+          type: string
+        stateId:
+          type: string
+          format: uuid
+        archived:
+          type: boolean
+          description: Archived issues are not in the bootstrap; fetch one with the lookup endpoint.
+        snippet:
+          type: string
+          description: An excerpt of the matching text, with matches wrapped in `<mark>` and `</mark>`. Plain text otherwise, not HTML.
+        inComment:
+          type: boolean
+          description: The match is in one of the issue's comments rather than the issue itself.
+
+    ApiKey:
+      type: object
+      required: [id, name, hint, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        hint:
+          type: string
+          description: The last characters of the key.
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+
+    CreateApiKeyRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+
+    CreatedApiKey:
+      type: object
+      required: [apiKey, token]
+      properties:
+        apiKey:
+          $ref: "#/components/schemas/ApiKey"
+        token:
+          type: string
+
+    Webhook:
+      type: object
+      required: [id, label, url, secret, models, enabled, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        url:
+          type: string
+        secret:
+          type: string
+          description: "Each delivery carries `Cruuze-Signature: sha256=<hex>`, the HMAC-SHA256 of the request body under this secret."
+        teamId:
+          type: string
+          format: uuid
+          description: Only this team's changes are sent. Absent means every public team plus workspace-wide records.
+        models:
+          type: array
+          description: The kinds of record whose changes are sent.
+          items:
+            $ref: "#/components/schemas/SyncModel"
+        enabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateWebhookRequest:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+        label:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        models:
+          type: array
+          description: Defaults to every model webhooks can carry.
+          items:
+            $ref: "#/components/schemas/SyncModel"
+
+    UpdateWebhookRequest:
+      type: object
+      properties:
+        url:
+          type: string
+        label:
+          type: string
+        models:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncModel"
+        enabled:
+          type: boolean
+
+    WebhookDelivery:
+      type: object
+      required: [id, model, action, status, attempts, error, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        model:
+          $ref: "#/components/schemas/SyncModel"
+        action:
+          type: string
+          description: create, update or remove.
+        status:
+          type: string
+          enum: [pending, delivered, failed]
+        attempts:
+          type: integer
+          format: int32
+        responseStatus:
+          type: integer
+          format: int32
+          description: The HTTP status of the last attempt, if the endpoint answered.
+        error:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+
+    GithubIntegration:
+      type: object
+      required: [enabled, webhookUrl]
+      properties:
+        enabled:
+          type: boolean
+        webhookUrl:
+          type: string
+          description: The payload URL to give GitHub.
+        secret:
+          type: string
+          description: The webhook secret to give GitHub. Present while enabled.
+
+    PullRequestStatus:
+      type: string
+      enum: [draft, open, merged, closed]
+
+    PullRequest:
+      description: A GitHub pull request linked to an issue.
+      type: object
+      required: [id, issueId, url, repo, number, title, branch, author, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        url:
+          type: string
+        repo:
+          type: string
+          description: owner/name.
+        number:
+          type: integer
+          format: int32
+        title:
+          type: string
+        branch:
+          type: string
+        author:
+          type: string
+        status:
+          $ref: "#/components/schemas/PullRequestStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ImportResult:
+      type: object
+      required: [created, labelsCreated, skipped]
+      properties:
+        created:
+          type: integer
+          format: int32
+        labelsCreated:
+          type: integer
+          format: int32
+        skipped:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportSkippedRow"
+
+    ImportSkippedRow:
+      type: object
+      required: [row, reason]
+      properties:
+        row:
+          type: integer
+          format: int32
+          description: The row number in the file, counting the header as row 1.
+        reason:
+          type: string
+
+    CreateWorkflowStateRequest:
+      type: object
+      required: [id, name, type, color]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/WorkflowStateType"
+        color:
+          type: string
+        position:
+          type: number
+          format: double
+          description: Where it sorts among the team's statuses. Defaults to last.
+
+    UpdateWorkflowStateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+        position:
+          type: number
+          format: double
+
+    UpdateIssuesRequest:
+      type: object
+      required: [updates]
+      properties:
+        updates:
+          type: array
+          description: At most 200.
+          items:
+            type: object
+            required: [issueId, patch]
+            properties:
+              issueId:
+                type: string
+                format: uuid
+              patch:
+                $ref: "#/components/schemas/UpdateIssueRequest"
+
+    ArchivedIssues:
+      type: object
+      required: [issues, more]
+      properties:
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/Issue"
+        more:
+          type: boolean
+          description: Whether there are older ones to fetch.
+
+    Calibration:
+      description: |
+        How the forecasting method did against this history: of the past
+        four-week forecasts that could be checked ("85% likely to complete at
+        least N"), how many held. About 85% should.
+      type: object
+      required: [windows, held]
+      properties:
+        windows:
+          type: integer
+          format: int32
+        held:
+          type: integer
+          format: int32
+
+    Durations:
+      description: How long issues took, in days.
+      type: object
+      required: [samples, p50, p85]
+      properties:
+        samples:
+          type: integer
+          format: int32
+          description: How many completed issues the figures come from.
+        p50:
+          type: number
+          format: double
+        p85:
+          type: number
+          format: double
+        p95:
+          type: number
+          format: double
+
+    TeamInsights:
+      type: object
+      required: [weeks, cycleTime, leadTime, flow, calibration]
+      properties:
+        weeks:
+          type: array
+          description: The last twelve weeks, oldest first; the last is the current, unfinished one.
+          items:
+            type: object
+            required: [start, created, completed]
+            properties:
+              start:
+                type: string
+                format: date
+                description: The Monday the week starts on (UTC).
+              created:
+                type: integer
+                format: int32
+              completed:
+                type: integer
+                format: int32
+        cycleTime:
+          $ref: "#/components/schemas/Durations"
+        leadTime:
+          $ref: "#/components/schemas/Durations"
+        flow:
+          type: array
+          description: How many issues were in each kind of status at the end of each week, oldest first.
+          items:
+            type: object
+            required: [date, backlog, unstarted, started, completed, canceled]
+            properties:
+              date:
+                type: string
+                format: date
+              backlog:
+                type: integer
+                format: int32
+              unstarted:
+                type: integer
+                format: int32
+              started:
+                type: integer
+                format: int32
+              completed:
+                type: integer
+                format: int32
+              canceled:
+                type: integer
+                format: int32
+        calibration:
+          $ref: "#/components/schemas/Calibration"
+
+    Forecast:
+      type: object
+      required: [remaining, completed, weeklyCompleted, enoughHistory, diverging, calibration]
+      properties:
+        remaining:
+          type: integer
+          format: int32
+          description: Open issues in scope.
+        completed:
+          type: integer
+          format: int32
+        weeklyCompleted:
+          type: array
+          description: Issues completed in each of the last twelve full weeks, oldest first. The forecast draws on these.
+          items:
+            type: integer
+            format: int32
+        enoughHistory:
+          type: boolean
+          description: False when too little has been completed to forecast from; the dates are then absent.
+        diverging:
+          type: boolean
+          description: True when work is being added about as fast as it is completed, so no end is in sight.
+        p50:
+          type: string
+          format: date
+          description: As likely as not to be done by this date.
+        p85:
+          type: string
+          format: date
+        p95:
+          type: string
+          format: date
+        targetDate:
+          type: string
+          format: date
+          description: "The date it is meant to be done by: the project's or milestone's target, or the cycle's end."
+        onTimeProbability:
+          type: number
+          format: double
+          description: The chance, from 0 to 1, of being done by the target date.
+        calibration:
+          $ref: "#/components/schemas/Calibration"
+
+    TimeEntry:
+      description: "Time someone spent on an issue. Only its owner sees an entry; everyone sees the issue's total."
+      type: object
+      required: [id, issueId, userId, startedAt, seconds, note]
+      properties:
+        id:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          description: Absent while the timer is running.
+        seconds:
+          type: integer
+          format: int32
+          description: How long it lasted; 0 while the timer is running.
+        note:
+          type: string
+
+    CreateTimeEntryRequest:
+      type: object
+      required: [id, startedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          description: Leave out to start a timer.
+        seconds:
+          type: integer
+          format: int32
+          description: "Required with `endedAt`: how much of the stretch was spent on the issue."
+        note:
+          type: string
+
+    UpdateTimeEntryRequest:
+      type: object
+      properties:
+        endedAt:
+          type: string
+          format: date-time
+        seconds:
+          type: integer
+          format: int32
+        note:
+          type: string
+
+    Initiative:
+      type: object
+      description: A goal that several projects serve.
+      required: [id, name, description, color, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        targetDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateInitiativeRequest:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        targetDate:
+          type: string
+          format: date
+
+    UpdateInitiativeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        targetDate:
+          type: string
+          format: date
+          nullable: true
+
+    ProjectDependency:
+      type: object
+      description: The project can't finish until the one it depends on has.
+      required: [id, projectId, dependsOnId, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        dependsOnId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateProjectDependencyRequest:
+      type: object
+      required: [id, dependsOnId]
+      properties:
+        id:
+          type: string
+          format: uuid
+        dependsOnId:
+          type: string
+          format: uuid
+
+    ProjectHealth:
+      type: string
+      enum: [onTrack, atRisk, offTrack]
+
+    ProjectUpdate:
+      type: object
+      description: A dated note on how a project is going. The newest is the project's health.
+      required: [id, projectId, health, body, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        health:
+          $ref: "#/components/schemas/ProjectHealth"
+        body:
+          type: string
+          description: Markdown.
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateProjectUpdateRequest:
+      type: object
+      required: [id, health]
+      properties:
+        id:
+          type: string
+          format: uuid
+        health:
+          $ref: "#/components/schemas/ProjectHealth"
+        body:
+          type: string
+
+    UpdatePortalRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        publicBoard:
+          type: boolean
+        intro:
+          type: string
+
+    CustomerRequestStatus:
+      type: string
+      enum: [new, reviewing, planned, shipped, declined]
+
+    CustomerRequest:
+      type: object
+      description: Something a customer asked for. Guests don't see these.
+      required: [id, requesterEmail, title, body, status, public, response, voteCount, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        requesterEmail:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        status:
+          $ref: "#/components/schemas/CustomerRequestStatus"
+        public:
+          type: boolean
+          description: Listed on the portal's public board, if the workspace has one.
+        response:
+          type: string
+          description: The team's answer, shown to the requester.
+        issueId:
+          type: string
+          format: uuid
+          description: The issue that would deliver it. Completing the issue ships the request.
+        voteCount:
+          type: integer
+          format: int32
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateCustomerRequestRequest:
+      type: object
+      required: [id, title, requesterEmail]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        body:
+          type: string
+        requesterEmail:
+          type: string
+        issueId:
+          type: string
+          format: uuid
+
+    UpdateCustomerRequestRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+        status:
+          $ref: "#/components/schemas/CustomerRequestStatus"
+        public:
+          type: boolean
+        response:
+          type: string
+        issueId:
+          type: string
+          format: uuid
+          nullable: true
+
+    PortalRequest:
+      type: object
+      description: A request as a portal visitor sees it.
+      required: [id, title, body, status, response, voteCount, voted, mine, public, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        body:
+          type: string
+        status:
+          $ref: "#/components/schemas/CustomerRequestStatus"
+        response:
+          type: string
+        voteCount:
+          type: integer
+          format: int32
+        voted:
+          type: boolean
+        mine:
+          type: boolean
+        public:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Portal:
+      type: object
+      required: [name, urlKey, intro, publicBoard, requests]
+      properties:
+        name:
+          type: string
+        urlKey:
+          type: string
+        intro:
+          type: string
+        publicBoard:
+          type: boolean
+        email:
+          type: string
+          description: Who the visitor is signed in as, if they are.
+        requests:
+          type: array
+          description: The visitor's own requests, and the public board if there is one.
+          items:
+            $ref: "#/components/schemas/PortalRequest"
+
+    CreatePortalRequestRequest:
+      type: object
+      required: [id, title]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        body:
+          type: string
+
+    ImportSource:
+      type: string
+      description: Where an import comes from.
+      enum: [github, linear, jira, csv, bundle]
+
+    ImportProvider:
+      type: string
+      enum: [github, linear, jira]
+
+    ImportConnection:
+      type: object
+      required: [provider, label, connectedAt]
+      properties:
+        provider:
+          $ref: "#/components/schemas/ImportProvider"
+        label:
+          type: string
+          description: The account or site, in words.
+        connectedAt:
+          type: string
+          format: date-time
+
+    ImportConnections:
+      type: object
+      required: [available, connections, resumable]
+      properties:
+        available:
+          type: array
+          description: The trackers this server is set up to connect to.
+          items:
+            $ref: "#/components/schemas/ImportProvider"
+        connections:
+          type: array
+          description: The caller's own connections in this workspace.
+          items:
+            $ref: "#/components/schemas/ImportConnection"
+        resumable:
+          type: boolean
+          description: |
+            Whether an import's credentials are kept, encrypted, while it
+            runs, so that it carries on by itself after a server restart.
+
+    ImportRequest:
+      type: object
+      description: |
+        What to import and how. Without a connection, credentials come with
+        the request; they are kept (encrypted, and only on a server set up
+        for it) no longer than the import runs. The rest is kept with the
+        import so that it can be run again.
+      required: [source]
+      properties:
+        source:
+          $ref: "#/components/schemas/ImportSource"
+        github:
+          type: object
+          required: [repo]
+          properties:
+            repo:
+              type: string
+              description: "owner/name"
+            token:
+              type: string
+              description: A personal access token. Needed for private repositories unless useConnection is set; without either GitHub allows only 60 requests an hour.
+            baseUrl:
+              type: string
+              description: The API address of a GitHub Enterprise Server, e.g. https://github.example.com/api/v3.
+        linear:
+          type: object
+          properties:
+            apiKey:
+              type: string
+              description: Needed unless useConnection is set.
+        jira:
+          type: object
+          description: baseUrl and token are needed unless useConnection is set.
+          properties:
+            baseUrl:
+              type: string
+              description: https://your-site.atlassian.net, or the address of a Jira Server or Data Center.
+            email:
+              type: string
+              description: The account's email, for Jira Cloud. Leave out to send the token as a bearer token (Server and Data Center).
+            token:
+              type: string
+        csv:
+          type: object
+          description: |
+            A CSV export, such as Linear's, Jira's or a spreadsheet's. It
+            needs a column of titles; issue keys (ENG-12), dates, statuses,
+            people, labels, parents and projects are used when present.
+          required: [text]
+          properties:
+            text:
+              type: string
+              description: The file's contents.
+            name:
+              type: string
+              description: Which export this is, e.g. its file name. Importing a newer copy under the same name updates the first.
+            teamName:
+              type: string
+              description: The team for rows that don't say which team they are in.
+        bundle:
+          type: object
+          description: A file in the import format (docs/import-format.md), for source "bundle".
+          additionalProperties: true
+        teams:
+          type: array
+          description: IDs (from the preview) of the source teams to import. Empty means all of them.
+          items:
+            type: string
+        asProjects:
+          type: boolean
+          description: |
+            Brings each source team in as a project of the team teamMap sends
+            it to, rather than as a team of its own. Every team imported then
+            needs an entry in teamMap.
+        teamMap:
+          type: object
+          description: Sends a source team (by its ID) into an existing team instead of a new one.
+          additionalProperties:
+            type: string
+            format: uuid
+        userMap:
+          type: object
+          description: Says who a source user (by their ID) is here. An empty string means nobody. Users left out are matched by email.
+          additionalProperties:
+            type: string
+        useConnection:
+          type: boolean
+          description: Reads the source through the caller's connection to it (GitHub, Linear or Jira Cloud) instead of a token in the request.
+        full:
+          type: boolean
+          description: |
+            Reads everything again. Otherwise, when the same thing was
+            imported to the end before, a GitHub or Jira import reads only
+            what changed since then.
+
+    ImportPreview:
+      type: object
+      description: What a source has to offer, before anything is imported.
+      required: [label, teams, users]
+      properties:
+        label:
+          type: string
+        teams:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportPreviewTeam"
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportPreviewUser"
+
+    ImportPreviewTeam:
+      type: object
+      required: [id, key, name, issues]
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+        name:
+          type: string
+        issues:
+          type: integer
+          format: int32
+          description: How many issues it has, or -1 if the source doesn't say.
+        teamId:
+          type: string
+          format: uuid
+          description: The existing team its issues would go into, if one matches.
+
+    ImportPreviewUser:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        userId:
+          type: string
+          format: uuid
+          description: |
+            The member they were matched to, if any: by email, by GitHub
+            username, as the person whose credentials these are, or by a
+            name only one member has.
+
+    ImportStatus:
+      type: string
+      enum: [running, done, failed, undone]
+
+    Import:
+      type: object
+      description: One run of an importer.
+      required: [id, source, label, status, stage, counts, warnings, error, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        source:
+          type: string
+        label:
+          type: string
+        status:
+          $ref: "#/components/schemas/ImportStatus"
+        stage:
+          type: string
+          description: What it is doing right now.
+        counts:
+          type: object
+          description: How many of each thing it created or updated.
+          additionalProperties:
+            type: integer
+        warnings:
+          type: array
+          items:
+            type: string
+        error:
+          type: string
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        request:
+          type: object
+          description: |
+            The ImportRequest that started it, with credentials blanked and
+            file contents left out. Sent again with the credentials filled
+            in, it runs the same import. Absent for imports from a file and
+            for those started before this was kept.
+          additionalProperties: true
+
+    SyncModel:
+      type: string
+      enum: [User, Team, TeamMember, WorkflowState, Label, Issue, Comment, Reaction, Activity, Attachment, Notification, Project, Milestone, Cycle, Relation, Template, View, Favorite, PullRequest, TimeEntry, Initiative, ProjectDependency, ProjectUpdate, CustomerRequest]
+
+    SyncAction:
+      description: One change to a synced record.
+      type: object
+      required: [syncId, model, modelId, action, data]
+      properties:
+        syncId:
+          type: integer
+          format: int64
+        model:
+          $ref: "#/components/schemas/SyncModel"
+        modelId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [I, U, D]
+          description: Insert, update or delete.
+        data:
+          type: object
+          description: The record after the change (before it, for deletes), in the model's schema.
+
+    SyncMessage:
+      description: A WebSocket frame sent by the server on the sync socket.
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [actions, reset]
+          description: |
+            `actions` carries changes to apply in order. `reset` means the
+            client's copy can no longer be patched (its access changed or it
+            fell too far behind) and it must bootstrap again.
+        lastSyncId:
+          type: integer
+          format: int64
+          description: With `actions`, the sync ID the client is current as of afterwards.
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncAction"

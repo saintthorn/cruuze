@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: cruuze
+      POSTGRES_PASSWORD: cruuze
+      POSTGRES_DB: cruuze
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cruuze"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  # S3-compatible storage, to try attachments against a bucket instead of the
+  # local disk they go to by default. Not started by `make up`:
+  #   docker compose --profile s3 up -d minio
+  # Docker Hub no longer serves minio/minio; point `image` at a registry that
+  # has it, or use any other S3-compatible server.
+  minio:
+    profiles: [s3]
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: cruuze
+      MINIO_ROOT_PASSWORD: cruuze-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+
+  # Catches outgoing email; UI at http://localhost:8025
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  # The whole app in one container, the way it is deployed. Not started by
+  # default:  docker compose --profile app up --build
+  app:
+    profiles: [app]
+    build: .
+    environment:
+      DATABASE_URL: postgres://cruuze:cruuze@postgres:5432/cruuze?sslmode=disable
+      APP_URL: http://localhost:8080
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+    ports:
+      - "8080:8080"
+    volumes:
+      - appdata:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  miniodata:
+  appdata:

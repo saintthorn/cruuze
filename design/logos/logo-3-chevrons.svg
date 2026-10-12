@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 176" width="520" height="176" role="img" aria-label="Cruuze logo option 3: Chevrons">
+  <rect width="520" height="176" rx="24" fill="#0c0c10"/>
+  <g transform="translate(40 40) scale(1.5)">
+  <path d="M14 18l14 14-14 14" fill="none" stroke="#f4f4f8" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M34 18l14 14-14 14" fill="none" stroke="#8f7dfa" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="164" y="113" fill="#f4f4f8" font-family="Inter, 'SF Pro Display', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="76" font-weight="650" letter-spacing="-3.5">cruuze</text>
+</svg>

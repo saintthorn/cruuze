@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en" data-theme="midnight">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cruuze app mockup 2: Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&family=JetBrains+Mono:wght@400..700&family=Roboto:wght@400..700&family=EB+Garamond:wght@400..700&family=Cinzel:wght@500..800&family=Exo+2:wght@400..700&family=Orbitron:wght@500..800&display=swap" rel="stylesheet">
+<style>
+  :root, [data-theme='midnight'] { --bg:#08090c; --rail:#050608; --panel:#0f1014; --hover:#15161c; --active:#1d1e26; --line:#1a1b22; --line-2:#2b2c36; --fg:#f4f2ec; --muted:#a3a09a; --faint:#6a6862; --accent:#dc2b3d; --accent-2:#a8321f; --accent-fg:#fff8f5; --ok:#3ecf8e; --warn:#f0b35a; --font:'Geist',ui-sans-serif,system-ui,sans-serif; --display:var(--font); --r:14px; --glow:rgb(220 43 61 / .22); --caps:none; --track:-.015em; color-scheme:dark; }
+  [data-theme='hacker'] { --bg:#0a0d0c; --rail:#070909; --panel:#0e1311; --hover:#121816; --active:#17201c; --line:#18211d; --line-2:#25332d; --fg:#c4e3d0; --muted:#7c988a; --faint:#4c6257; --accent:#2fe07f; --accent-2:#1c9a55; --accent-fg:#04140b; --ok:#2fe07f; --warn:#e5b567; --font:'JetBrains Mono',ui-monospace,Menlo,monospace; --display:var(--font); --r:3px; --glow:rgb(47 224 127 / .12); --caps:none; --track:0; color-scheme:dark; }
+  [data-theme='material'] { --bg:#f0f4f9; --rail:#e4eaf3; --panel:#ffffff; --hover:#e9eef6; --active:#d3e3fd; --line:#e1e3e8; --line-2:#c4c7c5; --fg:#1f1f1f; --muted:#444746; --faint:#747775; --accent:#0b57d0; --accent-2:#0842a0; --accent-fg:#ffffff; --ok:#146c2e; --warn:#9a5b00; --font:'Roboto',ui-sans-serif,system-ui,sans-serif; --display:var(--font); --r:20px; --glow:rgb(11 87 208 / .1); --caps:none; --track:0; color-scheme:light; }
+  [data-theme='quest'] { --bg:#e9dab8; --rail:#dfcda3; --panel:#f6ecd4; --hover:#e2d0a6; --active:#d6bf8c; --line:#cdb887; --line-2:#a68a52; --fg:#2a1b0c; --muted:#5c4729; --faint:#86704a; --accent:#8c1c13; --accent-2:#5e120c; --accent-fg:#f8ecd0; --ok:#3a6a2c; --warn:#8f5f00; --font:'EB Garamond',Palatino,Georgia,serif; --display:'Cinzel','EB Garamond',serif; --r:5px; --glow:rgb(176 132 42 / .25); --caps:none; --track:.01em; color-scheme:light; }
+  [data-theme='hyperdrive'] { --bg:#05070d; --rail:#03050a; --panel:#0a101c; --hover:#0f1828; --active:#15233b; --line:#13203a; --line-2:#214070; --fg:#cfe8ff; --muted:#7f9fc6; --faint:#4a658c; --accent:#ffb62e; --accent-2:#c9781a; --accent-fg:#1a1000; --ok:#5ef2c0; --warn:#ff8f3d; --font:'Exo 2',ui-sans-serif,system-ui,sans-serif; --display:'Orbitron','Exo 2',sans-serif; --r:0px; --glow:rgb(79 216 255 / .16); --caps:uppercase; --track:.02em; color-scheme:dark; }
+  [data-theme='quest'] body { font-size: 16.5px; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body { background: radial-gradient(ellipse 70% 50% at 50% -10%, var(--glow), transparent 70%), var(--bg); color: var(--fg); font: 14px/1.45 var(--font); letter-spacing: var(--track); -webkit-font-smoothing: antialiased; overflow: hidden; transition: background .5s, color .3s; }
+  button { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; }
+  .mono { font-family: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 0; }
+  h1, h2, h3 { font-family: var(--display); text-transform: var(--caps); }
+  .themes { align-items: center; backdrop-filter: blur(14px); background: color-mix(in srgb, var(--panel) 80%, transparent); border: 1px solid var(--line-2); border-radius: 999px; bottom: 16px; box-shadow: 0 18px 40px -18px #000; display: flex; gap: 6px; padding: 6px 8px 6px 14px; position: fixed; right: 16px; z-index: 50; }
+  .themes span { color: var(--muted); font-size: 12px; margin-right: 4px; }
+  .themes button { border: 2px solid transparent; border-radius: 50%; height: 22px; transition: transform .2s; width: 22px; }
+  .themes button:hover { transform: scale(1.15); }
+  .themes button[aria-pressed='true'] { border-color: var(--fg); }
+
+  .app { display: grid; grid-template-columns: 232px 1fr; height: 100%; }
+  aside { border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; padding: 16px 12px; }
+  .brand { align-items: center; display: flex; font-family: var(--display); font-size: 17px; font-weight: 600; gap: 9px; padding: 4px 8px 14px; text-transform: var(--caps); }
+  .mark { height: 24px; width: 24px; }
+  aside a { text-decoration: none; align-items: center; border-radius: calc(var(--r) * .7); color: var(--muted); display: flex; gap: 11px; padding: 8px 10px; transition: background .2s, color .2s, padding .2s; }
+  aside a:hover { background: var(--hover); color: var(--fg); padding-left: 13px; }
+  aside a[aria-current] { background: var(--active); color: var(--fg); }
+  aside a b { background: var(--accent); border-radius: 99px; color: var(--accent-fg); font-size: 10.5px; margin-left: auto; padding: 1px 7px; }
+  aside h2 { color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .08em; padding: 18px 10px 6px; text-transform: uppercase; }
+  .team i { border-radius: 4px; height: 10px; width: 10px; }
+  .user { align-items: center; border: 1px solid var(--line); border-radius: var(--r); display: flex; gap: 10px; margin-top: auto; padding: 10px; }
+  .av { align-items: center; background: color-mix(in srgb, var(--accent) 22%, var(--panel)); border-radius: 50%; display: inline-flex; flex: none; font-size: 10px; font-weight: 700; height: 26px; justify-content: center; width: 26px; }
+  .user small { color: var(--ok); display: block; font-size: 11.5px; }
+  main { display: flex; flex-direction: column; gap: 18px; min-width: 0; overflow-y: auto; padding: 22px 26px 80px; scrollbar-width: thin; }
+  .bar { align-items: center; display: flex; gap: 12px; }
+  .bar h1 { font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
+  .bar p { color: var(--muted); }
+  .cmd { align-items: center; background: var(--panel); border: 1px solid var(--line-2); border-radius: 999px; color: var(--faint); display: flex; gap: 10px; height: 38px; margin-left: auto; padding: 0 8px 0 14px; width: 300px; }
+  .cmd kbd { background: var(--hover); border-radius: 6px; color: var(--muted); font: 11px 'Geist Mono', ui-monospace, monospace; margin-left: auto; padding: 3px 7px; }
+  .new { align-items: center; background: linear-gradient(160deg, var(--accent), var(--accent-2)); border-radius: 999px; box-shadow: 0 8px 20px -10px var(--accent); color: var(--accent-fg); display: flex; font-weight: 600; gap: 6px; height: 38px; padding: 0 16px 0 12px; }
+  .now { display: grid; gap: 14px; grid-template-columns: 1.4fr 1fr 1fr; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: calc(var(--r) * 1.3); padding: 20px; transition: border-color .25s, transform .3s cubic-bezier(.2,.7,.2,1); }
+  .card:hover { border-color: var(--line-2); transform: translateY(-3px); }
+  .card > span:first-child { color: var(--faint); font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .next { background: radial-gradient(ellipse 90% 120% at 0% 0%, var(--glow), transparent 60%), var(--panel); }
+  .next h2 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; margin-top: 10px; }
+  .next p { color: var(--muted); margin-top: 6px; }
+  .acts { display: flex; gap: 8px; margin-top: 18px; }
+  .go { align-items: center; background: var(--fg); border-radius: 999px; color: var(--bg); display: flex; font-weight: 600; gap: 7px; height: 36px; padding: 0 16px 0 12px; }
+  .go svg { height: 13px; width: 13px; }
+  .alt { border: 1px solid var(--line-2); border-radius: 999px; color: var(--muted); height: 36px; padding: 0 14px; }
+  .ring { align-items: center; display: flex; gap: 18px; margin-top: 12px; }
+  .ring svg { flex: none; height: 92px; transform: rotate(-90deg); width: 92px; }
+  .ring circle { fill: none; stroke-width: 9; }
+  .ring .bg { stroke: var(--hover); }
+  .ring .fg { stroke: var(--accent); stroke-dasharray: 251; stroke-dashoffset: 95; stroke-linecap: round; transition: stroke-dashoffset 1s; }
+  .ring b { display: block; font-size: 26px; font-weight: 600; letter-spacing: -.03em; }
+  .ring span { color: var(--muted); font-size: 12.5px; }
+  .dates { border-top: 1px solid var(--line); color: var(--muted); display: flex; font-size: 12px; justify-content: space-between; margin-top: 14px; padding-top: 12px; }
+  .dates b { color: var(--fg); font-weight: 500; }
+  .note { align-items: center; border-bottom: 1px solid var(--line); display: flex; font-size: 13px; gap: 10px; padding: 9px 0; }
+  .note:last-child { border: 0; }
+  .note span { color: var(--faint); font-size: 11.5px; margin-left: auto; white-space: nowrap; }
+  .note i { background: var(--accent); border-radius: 50%; flex: none; height: 6px; width: 6px; }
+  .board { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .col { background: color-mix(in srgb, var(--panel) 55%, transparent); border: 1px solid var(--line); border-radius: calc(var(--r) * 1.3); padding: 12px; }
+  .col > h3 { align-items: center; display: flex; font-size: 12.5px; font-weight: 600; gap: 8px; padding: 2px 4px 12px; }
+  .col > h3 i { border-radius: 50%; height: 8px; width: 8px; }
+  .col > h3 span { color: var(--faint); font-family: var(--font); font-weight: 400; }
+  .tk { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); cursor: grab; margin-bottom: 9px; padding: 13px; transition: border-color .2s, box-shadow .25s, transform .25s cubic-bezier(.2,.7,.2,1); }
+  .tk:hover { border-color: var(--accent); box-shadow: 0 16px 30px -18px var(--accent); transform: translateY(-3px) rotate(-.6deg); }
+  .tk small { color: var(--faint); display: block; font-size: 11.5px; margin-bottom: 4px; }
+  .tk footer { align-items: center; display: flex; gap: 6px; margin-top: 12px; }
+  .tk footer .av { height: 22px; margin-left: auto; width: 22px; }
+  .tag { align-items: center; border: 1px solid var(--line-2); border-radius: 999px; color: var(--muted); display: inline-flex; font-size: 11px; gap: 4px; padding: 1px 8px; }
+  .tag svg { height: 11px; width: 11px; }
+  .tag.ok { border-color: transparent; background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+  .add { border: 1px dashed var(--line-2); border-radius: var(--r); color: var(--faint); padding: 9px; text-align: center; width: 100%; }
+  .add:hover { border-color: var(--accent); color: var(--fg); }
+  @media (max-width: 1000px) { .app { grid-template-columns: 1fr; } aside { display: none; } .now { grid-template-columns: 1fr; } .board { grid-template-columns: 1fr 1fr; } .cmd { display: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M29 9c15 11 23 23 26 37H13z" fill="var(--fg)" stroke="var(--fg)" stroke-width="3" stroke-linejoin="round"/><path d="M11 56h44" fill="none" stroke="var(--accent)" stroke-width="6.5" stroke-linecap="round"/></svg>Cruuze</div>
+    <a href="#" aria-current=page><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>Focus</a><a href="#"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l3-8h12l3 8v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 13h5l1 3h6l1-3h5"/></svg>Inbox<b>4</b></a><a href="#"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5.5"/></svg>My issues</a><a href="#"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M8 12h12M4 18h7"/></svg>Roadmap</a><a href="#"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Insights</a>
+    <h2>Teams</h2>
+    <a class="team" href="#"><i style="background:var(--accent)"></i>Engineering</a>
+    <a class="team" href="#"><i style="background:var(--warn)"></i>Design</a>
+    <a class="team" href="#"><i style="background:var(--ok)"></i>Support</a>
+    <div class="user"><span class="av">AL</span><div>Ada Lovelace<small>● Live</small></div></div>
+  </aside>
+  <main>
+    <div class="bar"><div><h1>Focus</h1><p>Engineering · Cycle 14</p></div>
+      <button class="cmd"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search or run a command</span><kbd>⌘K</kbd></button>
+      <button class="new"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>New issue</button></div>
+    <div class="now">
+      <div class="card next"><span>Up next</span><h2>Outbox survives a reload</h2><p><span class="mono">ENG-142</span> · In Progress · branch pushed 2h ago</p>
+        <div class="acts"><button class="go"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>Start timer</button><button class="alt">Open</button><button class="alt">Skip</button></div></div>
+      <div class="card"><span>Cycle 14</span>
+        <div class="ring"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="40"/><circle class="fg" cx="50" cy="50" r="40"/></svg><div><b>62%</b><span>6 days left</span></div></div>
+        <div class="dates"><span>50% <b>Oct 12</b></span><span>85% <b>Oct 16</b></span><span>95% <b>Oct 19</b></span></div></div>
+      <div class="card"><span>Inbox</span>
+        <div style="margin-top:8px">
+          <div class="note"><i></i>Kim mentioned you on ENG-147<span>12m</span></div>
+          <div class="note"><i></i>Review requested on ENG-145<span>1h</span></div>
+          <div class="note">ENG-139 merged<span>3h</span></div>
+          <div class="note">Mira linked 3 requests<span>1d</span></div>
+        </div></div>
+    </div>
+    <div class="board"><section class="col"><h3><i style="background:var(--faint)"></i>Todo<span>3</span></h3><article class="tk"><small class="mono">ENG-143</small>Forecast from history<footer><span class="av">KJ</span></footer></article><article class="tk"><small class="mono">ENG-144</small>Notify requesters on ship<footer><span class="av">MR</span></footer></article><article class="tk"><small class="mono">ENG-146</small>Lazy-load board columns<footer><span class="av">AL</span></footer></article><button class="add">+</button></section><section class="col"><h3><i style="background:var(--warn)"></i>In Progress<span>2</span></h3><article class="tk"><small class="mono">ENG-142</small>Outbox survives a reload<footer><span class="tag"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10M18 10c0 4-6 3-10.5 6"/></svg>eng-142-outbox</span><span class="av">AL</span></footer></article><article class="tk"><small class="mono">ENG-147</small>Outbox drops edits on reload<footer><span class="av">KJ</span></footer></article><button class="add">+</button></section><section class="col"><h3><i style="background:var(--accent)"></i>In Review<span>1</span></h3><article class="tk"><small class="mono">ENG-145</small>Batch edits, one request<footer><span class="tag"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10M18 10c0 4-6 3-10.5 6"/></svg>review requested</span><span class="av">GH</span></footer></article><button class="add">+</button></section><section class="col"><h3><i style="background:var(--ok)"></i>Done<span>2</span></h3><article class="tk"><small class="mono">ENG-139</small>Signed webhooks<footer><span class="tag ok"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10M18 10c0 4-6 3-10.5 6"/></svg>merged</span><span class="av">GH</span></footer></article><article class="tk"><small class="mono">ENG-140</small>Per-person API keys<footer><span class="tag ok"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10M18 10c0 4-6 3-10.5 6"/></svg>merged</span><span class="av">MR</span></footer></article><button class="add">+</button></section></div>
+  </main>
+</div>
+<div class="themes" role="group" aria-label="Theme"><span id="theme-name">mode=midnight</span>
+  <button data-set="midnight" aria-label="mode=midnight" style="background:linear-gradient(135deg,#08090c 50%,#dc2b3d 50%)"></button>
+  <button data-set="hacker" aria-label="mode=hacker" style="background:linear-gradient(135deg,#0a0d0c 50%,#2fe07f 50%)"></button>
+  <button data-set="material" aria-label="mode=material" style="background:linear-gradient(135deg,#ffffff 50%,#0b57d0 50%)"></button>
+  <button data-set="quest" aria-label="mode=quest" style="background:linear-gradient(135deg,#efe2c4 50%,#8c1c13 50%)"></button>
+  <button data-set="hyperdrive" aria-label="mode=hyperdrive" style="background:linear-gradient(135deg,#05070d 50%,#ffb62e 50%)"></button>
+</div>
+<script>
+  const setTheme = (id) => {
+    document.documentElement.dataset.theme = id
+    document.getElementById('theme-name').textContent = 'mode=' + id
+    document.querySelectorAll('.themes button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.set === id)))
+  }
+  document.querySelectorAll('.themes button').forEach((b) => b.addEventListener('click', () => setTheme(b.dataset.set)))
+  setTheme('midnight')
+</script>
+
+</body>
+</html>

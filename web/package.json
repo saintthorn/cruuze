@@ -1,0 +1,44 @@
+{
+  "name": "cruuze-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "typecheck": "vue-tsc --noEmit && tsc --noEmit -p e2e",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "gen:api": "openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts"
+  },
+  "dependencies": {
+    "@tiptap/extension-image": "^3.31.4",
+    "@tiptap/extension-mention": "^3.31.4",
+    "@tiptap/extensions": "^3.31.4",
+    "@tiptap/markdown": "^3.31.4",
+    "@tiptap/pm": "^3.31.4",
+    "@tiptap/starter-kit": "^3.31.4",
+    "@tiptap/suggestion": "^3.31.4",
+    "@tiptap/vue-3": "^3.31.4",
+    "idb": "^8.0.3",
+    "lucide-vue-next": "^1.0.0",
+    "openapi-fetch": "^0.17.0",
+    "pinia": "^4.0.3",
+    "reka-ui": "^2.10.5",
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.3",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "fake-indexeddb": "^6.2.5",
+    "openapi-typescript": "^7.13.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3",
+    "vue-tsc": "^3.3.11"
+  }
+}

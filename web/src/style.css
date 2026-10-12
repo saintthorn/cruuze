@@ -1,0 +1,230 @@
+@import 'tailwindcss';
+
+/* Design tokens. These are the defaults, the theme "mode=midnight": midnight
+   black, warm white text, and one crimson for what matters. The other themes
+   redefine them in themes.css. */
+:root {
+  --bg: #08090c;
+  --bg-sidebar: #050608;
+  --bg-elevated: #0f1014;
+  --bg-hover: #15161c;
+  --bg-active: #1d1e26;
+  --border: #1a1b22;
+  --border-strong: #2b2c36;
+  --fg: #f4f2ec;
+  --fg-muted: #a3a09a;
+  --fg-faint: #6a6862;
+  --accent: #dc2b3d;
+  --accent-hover: #f0475a;
+  --accent-fg: #fff8f5;
+  --danger: #ff8a5c;
+  --success: #3ecf8e;
+  --warning: #f0b35a;
+  --selection-fg: #fff;
+  color-scheme: dark;
+
+  /* The typeface of the interface, and of page and section headings. */
+  --font-ui: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-ui);
+  --font-size: 13.5px;
+  /* Evens out faces whose lowercase is small for their size. */
+  --font-adjust: none;
+  --r-xs: 3px;
+  --r-sm: 5px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-2xl: 20px;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-sidebar: var(--bg-sidebar);
+  --color-elevated: var(--bg-elevated);
+  --color-hover: var(--bg-hover);
+  --color-active: var(--bg-active);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-faint: var(--fg-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  --font-sans: var(--font-ui);
+
+  --radius-xs: var(--r-xs);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-2xl: var(--r-2xl);
+}
+
+/* In the base layer so that utility classes (e.g. outline-none) can override. */
+@layer base {
+  html,
+  body,
+  #app {
+    height: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: var(--font-size);
+    font-size-adjust: var(--font-adjust);
+    line-height: 1.5;
+    caret-color: var(--accent);
+    font-variant-ligatures: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Tailwind's preflight removes the pointer cursor from buttons. */
+  button:not(:disabled),
+  [role='menuitem'] {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 35%, transparent);
+    color: var(--selection-fg);
+  }
+
+  * {
+    scrollbar-color: var(--border-strong) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+/* mode=hacker: section headings in the sidebar read like comments in source.
+   The alternative text is empty so screen readers and tests see only the
+   words. */
+html[data-theme='hacker'] nav h2 {
+  text-transform: lowercase;
+}
+html[data-theme='hacker'] nav h2::before {
+  content: '//' / '';
+  /* A margin, not a space: flex headings would swallow the space. */
+  margin-right: 1ch;
+}
+
+/* The sidebar's sync log needs room; short windows go without. */
+.sync-log {
+  display: none;
+}
+@media (min-height: 820px) {
+  .sync-log {
+    display: block;
+  }
+}
+
+/* mode=hacker: page titles sit at a prompt. */
+html[data-theme='hacker'] header h1::before {
+  color: var(--accent);
+  content: '\276F' / '';
+  margin-right: 1ch;
+}
+
+/* Rich text: Tailwind's preflight strips the default look of headings, lists
+   and so on, so content written in the editor needs its own. */
+.rich-text .tiptap {
+  outline: none;
+  overflow-wrap: anywhere;
+}
+.rich-text .tiptap > * + * {
+  margin-top: 0.6em;
+}
+.rich-text .tiptap h1,
+.rich-text .tiptap h2,
+.rich-text .tiptap h3 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1.2em;
+}
+.rich-text .tiptap h1 {
+  font-size: 1.5em;
+}
+.rich-text .tiptap h2 {
+  font-size: 1.25em;
+}
+.rich-text .tiptap h3 {
+  font-size: 1.1em;
+}
+.rich-text .tiptap ul,
+.rich-text .tiptap ol {
+  padding-left: 1.5em;
+}
+.rich-text .tiptap ul {
+  list-style: disc;
+}
+.rich-text .tiptap ol {
+  list-style: decimal;
+}
+.rich-text .tiptap li > p {
+  margin: 0;
+}
+.rich-text .tiptap blockquote {
+  border-left: 2px solid var(--border-strong);
+  color: var(--fg-muted);
+  padding-left: 0.9em;
+}
+.rich-text .tiptap code {
+  background: var(--bg-active);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.3em;
+}
+.rich-text .tiptap pre {
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow-x: auto;
+  padding: 0.7em 0.9em;
+}
+.rich-text .tiptap pre code {
+  background: none;
+  padding: 0;
+}
+.rich-text .tiptap hr {
+  border-color: var(--border);
+  margin: 1em 0;
+}
+.rich-text .tiptap a {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.rich-text .tiptap a[href^='mention://'] {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 4px;
+  color: var(--fg);
+  cursor: default;
+  padding: 0.05em 0.25em;
+  text-decoration: none;
+}
+.rich-text .tiptap img {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  max-height: 480px;
+  max-width: 100%;
+}
+/* Placeholder, shown by the editor on an empty first paragraph. */
+.rich-text .tiptap p.is-editor-empty:first-child::before {
+  color: var(--fg-faint);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

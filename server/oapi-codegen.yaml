@@ -1,0 +1,13 @@
+package: api
+output: internal/api/api.gen.go
+generate:
+  models: true
+  chi-server: true
+output-options:
+  nullable-type: true
+  # Keep schemas that only the sync WebSocket uses.
+  skip-prune: true
+compatibility:
+  # Otherwise a constant is only prefixed when its name collides, so adding
+  # an enum value somewhere can rename constants elsewhere.
+  always-prefix-enum-values: true

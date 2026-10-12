@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 176" width="520" height="176" role="img" aria-label="Cruuze">
+<rect width="520" height="176" rx="24" fill="#08090c"/>
+<g transform="translate(40 40) scale(1.5)"><path d="M29 9c15 11 23 23 26 37H13z" fill="#f4f2ec" stroke="#f4f2ec" stroke-width="3" stroke-linejoin="round"/><path d="M11 56h44" fill="none" stroke="#dc2b3d" stroke-width="6.5" stroke-linecap="round"/></g>
+<text x="164" y="113" fill="#f4f2ec" font-family="Geist, Inter, 'SF Pro Display', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="76" font-weight="620" letter-spacing="-4">cruuze</text>
+</svg>

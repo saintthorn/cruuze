@@ -1,0 +1,7 @@
+# Caddy gets a certificate for the domain from Let's Encrypt by itself and
+# renews it. The domain's DNS must point at this machine, and ports 80 and
+# 443 must be reachable from the internet.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:8080
+}

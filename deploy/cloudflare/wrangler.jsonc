@@ -1,0 +1,70 @@
+// Cruuze on Cloudflare: a Worker in front of one container running the image
+// built from the repository's Dockerfile. See docs/cloudflare.md.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cruuze",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+
+  // Serve the app on your own hostname (the zone must be on this Cloudflare
+  // account), and stop serving it on workers.dev. APP_URL below must match.
+  "routes": [{ "pattern": "cruuze.example.com", "custom_domain": true }],
+  "workers_dev": false,
+
+  "containers": [
+    {
+      "name": "cruuze-server",
+      "class_name": "CruuzeServer",
+      "image": "../../Dockerfile",
+      "image_build_context": "../..",
+      // 1/4 vCPU, 1 GiB memory. "lite" (1/16 vCPU, 256 MiB) is cheaper.
+      "instance_type": "basic",
+      // The Worker sends every request to the same container. Running more
+      // than one has not been tried.
+      "max_instances": 1,
+      // Keep the container near the database (PlanetScale, AWS us-west-2):
+      // WNAM is western North America, ENAM eastern, WEUR western Europe.
+      "constraints": { "regions": ["WNAM"] }
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "SERVER", "class_name": "CruuzeServer" }]
+  },
+  "exports": {
+    "CruuzeServer": { "type": "durable-object", "storage": "sqlite" }
+  },
+
+  // Every minute the Worker checks on the container: starts it if it is not
+  // running, and restarts it if a setting changed. See keepAlive in src/index.ts.
+  "triggers": { "crons": ["* * * * *"] },
+
+  // Every variable and secret of this Worker is passed to the server as an
+  // environment variable; .env.example at the repository root lists them all.
+  // Secrets (DATABASE_URL, RESEND_API_KEY, S3_ACCESS_KEY, S3_SECRET_KEY,
+  // GOOGLE_CLIENT_SECRET, METRICS_TOKEN, SECRETS_KEY, IMPORT_*_CLIENT_SECRET)
+  // are set with `wrangler secret put`, not here.
+  "vars": {
+    "APP_URL": "https://cruuze.example.com",
+    "MAIL_FROM": "Cruuze <noreply@cruuze.example.com>",
+    "INSTANCE_ADMINS": "",
+    // Cloudflare adds its Web Analytics script to the pages; let it run.
+    "CLOUDFLARE_WEB_ANALYTICS": "true",
+
+    // Attachments. The container's disk is wiped on every restart, so they
+    // must go to a bucket. For R2: <account id>.r2.cloudflarestorage.com.
+    "S3_ENDPOINT": "<account id>.r2.cloudflarestorage.com",
+    "S3_BUCKET": "cruuze",
+    "S3_REGION": "auto",
+
+    "GOOGLE_CLIENT_ID": "",
+
+    // Connecting trackers on the import page (docs/import-connections.md).
+    // Each needs its _CLIENT_SECRET and SECRETS_KEY set as secrets first:
+    // the server refuses to start with an ID that lacks either.
+    "IMPORT_GITHUB_CLIENT_ID": "",
+    "IMPORT_ATLASSIAN_CLIENT_ID": "",
+    "IMPORT_LINEAR_CLIENT_ID": ""
+  },
+  "secrets": { "required": ["DATABASE_URL"] }
+}

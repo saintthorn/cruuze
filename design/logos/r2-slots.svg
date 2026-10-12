@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 176" width="520" role="img" aria-label="Cruuze logo: Slots">
+<rect width="520" height="176" rx="24" fill="#0c0c10"/>
+<g transform="translate(40 40) scale(1.5)"><mask id="m0"><rect width="64" height="64" fill="#fff"/><path d="M15 0h12v34a6 6 0 0 1-12 0zM37 0h12v34a6 6 0 0 1-12 0z" fill="#000"/></mask>
+<rect x="6" y="8" width="52" height="48" rx="13" fill="#f4f4f8" mask="url(#m0)"/>
+<rect x="39.5" y="24" width="7" height="13" rx="3.5" fill="#8f7dfa"/></g>
+<text x="164" y="113" fill="#f4f4f8" font-family="Inter, 'SF Pro Display', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="76" font-weight="620" letter-spacing="-4">cruuze</text>
+</svg>
